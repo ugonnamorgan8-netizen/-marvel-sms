@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Training Management System - Manage students, certificates, and activities">
+    <title>Training Management System</title>
+    
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- jsPDF for PDF Generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    
+    <!-- External Stylesheet -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Login/Registration Page -->
+    <div id="authPage" class="page active">
+        <div class="auth-container">
+            <div class="auth-card">
+                <div class="auth-header">
+                    <img src="Documents/marvel-logo.png" alt="Marvel Logo" class="auth-logo">
+                    <h1>Marvel Students Management System</h1>
+                    <p>Professional Training & Certification Platform</p>
+                </div>
+
+                <!-- Login Form -->
+                <div id="loginForm" class="auth-form active">
+                    <h2>Login</h2>
+                    <form id="loginFormElement">
+                        <div class="form-group">
+                            <label for="loginUsername">
+                                <i class="fas fa-user"></i> Username
+                            </label>
+                            <input type="text" id="loginUsername" required aria-label="Username">
+                        </div>
+                        <div class="form-group">
+                            <label for="loginPassword">
+                                <i class="fas fa-lock"></i> Password
+                            </label>
+                            <input type="password" id="loginPassword" required aria-label="Password">
+                        </div>
+                        <button type="submit" class="btn btn-primary" aria-label="Login">
+                            <i class="fas fa-sign-in-alt"></i> Login
+                        </button>
+                    </form>
+                    <p class="auth-switch">
+                        Don't have an account? 
+                        <a href="#" id="showRegister">Register here</a>
+                    </p>
+                </div>
+
+                <!-- Registration Form -->
+                <div id="registerForm" class="auth-form">
+                    <h2>Register</h2>
+                    <form id="registerFormElement">
+                        <div class="form-group">
+                            <label for="regUsername">
+                                <i class="fas fa-user"></i> Username
+                            </label>
+                            <input type="text" id="regUsername" required aria-label="Username">
+                        </div>
+                        <div class="form-group">
+                            <label for="regPassword">
+                                <i class="fas fa-lock"></i> Password
+                            </label>
+                            <input type="password" id="regPassword" required aria-label="Password">
+                        </div>
+                        <div class="form-group">
+                            <label for="regRole">
+                                <i class="fas fa-user-tag"></i> Role
+                            </label>
+                            <select id="regRole" required aria-label="Select Role">
+                                <option value="student">Student</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                        </div>
+                        <div class="form-group" id="pinFieldGroup" style="display: none;">
+                            <label for="regPin">
+                                <i class="fas fa-key"></i> Secret PIN (4-6 digits)
+                            </label>
+                            <input type="password" id="regPin" maxlength="6" pattern="[0-9]{4,6}" placeholder="Enter 4-6 digit PIN" aria-label="Secret PIN">
+                            <small style="color: #6b7280; font-size: 0.85rem;">Required for logging activities</small>
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <i class="fas fa-calendar-alt"></i> Training Schedule
+                            </label>
+                            <div class="schedule-checkboxes">
+                                <label><input type="checkbox" value="mon"> Mon</label>
+                                <label><input type="checkbox" value="tue"> Tue</label>
+                                <label><input type="checkbox" value="wed"> Wed</label>
+                                <label><input type="checkbox" value="thu"> Thu</label>
+                                <label><input type="checkbox" value="fri"> Fri</label>
+                                <label><input type="checkbox" value="sat"> Sat</label>
+                                <label><input type="checkbox" value="sun"> Sun</label>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary" aria-label="Register">
+                            <i class="fas fa-user-plus"></i> Register
+                        </button>
+                    </form>
+                    <p class="auth-switch">
+                        Already have an account? 
+                        <a href="#" id="showLogin">Login here</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Student Dashboard -->
+    <div id="studentDashboard" class="page dashboard">
+        <nav class="navbar">
+            <div class="nav-brand">
+                <img src="images/marvel-logo.png.png" alt="Marvel Logo" class="nav-logo">
+                <span>Marvel Students Management System</span>
+            </div>
+            <div class="nav-user">
+                <span id="studentName"></span>
+                <button class="btn btn-secondary btn-compact" id="studentLogout" aria-label="Logout">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </button>
+            </div>
+        </nav>
+
+        <div class="dashboard-container">
+            <!-- Alerts Section -->
+            <div class="card alerts-card" id="studentAlertsCard">
+                <div class="card-header">
+                    <i class="fas fa-bell"></i> Alerts & Notifications
+                </div>
+                <div class="card-body" id="studentAlerts">
+                    <p class="no-data">No new alerts</p>
+                </div>
+            </div>
+
+            <!-- Progress Section -->
+            <div class="card-grid">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-calendar-check"></i> Training Progress
+                    </div>
+                    <div class="card-body">
+                        <div class="info-item">
+                            <strong>Schedule:</strong> 
+                            <span id="studentSchedule"></span>
+                        </div>
+                        <div class="info-item">
+                            <strong>Course End Date:</strong> 
+                            <span id="studentEndDate">Not set</span>
+                        </div>
+                        <div class="info-item training-days">
+                            <strong>Training Days Left:</strong> 
+                            <span id="trainingDaysLeft">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-chart-line"></i> Quick Stats
+                    </div>
+                    <div class="card-body">
+                        <div class="info-item">
+                            <strong>Total Activities:</strong> 
+                            <span id="studentActivityCount">0</span>
+                        </div>
+                        <div class="info-item">
+                            <strong>Total Payments:</strong> 
+                            <span id="studentPaymentTotal">₦0</span>
+                        </div>
+                        <div class="info-item">
+                            <strong>Certificates:</strong> 
+                            <span id="studentCertCount">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Activity Logging -->
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-tasks"></i> Log Activity
+                </div>
+                <div class="card-body">
+                    <form id="studentActivityForm">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <input type="text" id="activityDescription" placeholder="Activity description" required aria-label="Activity description">
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-compact" aria-label="Add Activity">
+                                <i class="fas fa-plus"></i> Add Activity
+                            </button>
+                        </div>
+                    </form>
+                    <div class="activity-list" id="studentActivityList"></div>
+                </div>
+            </div>
+
+            <!-- Certificates -->
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-certificate"></i> My Certificates
+                </div>
+                <div class="card-body">
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="studentCertSearch" placeholder="Search certificates..." aria-label="Search certificates">
+                    </div>
+                    <div class="cert-list" id="studentCertList"></div>
+                </div>
+            </div>
+
+            <!-- Transactions -->
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-money-bill-wave"></i> My Transactions
+                    <button class="btn btn-secondary btn-compact" id="studentDownloadPDF" style="margin-left: auto;" aria-label="Download PDF">
+                        <i class="fas fa-file-pdf"></i> Download PDF
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="transaction-list" id="studentTransactionList"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Dashboard -->
+    <div id="adminDashboard" class="page dashboard">
+        <nav class="navbar">
+            <div class="nav-brand">
+                <img src="images/marvel-logo.png.png" alt="Marvel Logo" class="nav-logo">
+                <span>Marvel Students Management System</span>
+            </div>
+            <div class="nav-user">
+                <span id="adminName"></span>
+                <button class="btn btn-secondary btn-compact" id="adminLogout" aria-label="Logout">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </button>
+            </div>
+        </nav>
+
+        <div class="dashboard-container">
+            <!-- Business Insights -->
+            <div class="card-grid insights-grid">
+                <div class="card stat-card">
+                    <div class="stat-icon blue">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 id="totalStudents">0</h3>
+                        <p>Total Students</p>
+                    </div>
+                </div>
+                <div class="card stat-card">
+                    <div class="stat-icon green">
+                        <i class="fas fa-dollar-sign"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 id="totalRevenue">₦0</h3>
+                        <p>Total Revenue</p>
+                    </div>
+                </div>
+                <div class="card stat-card">
+                    <div class="stat-icon purple">
+                        <i class="fas fa-certificate"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 id="completedCerts">0</h3>
+                        <p>Completed Certificates</p>
+                    </div>
+                </div>
+                <div class="card stat-card">
+                    <div class="stat-icon orange">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 id="totalExpenses">₦0</h3>
+                        <p>Total Expenses</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Send Alert -->
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-bullhorn"></i> Broadcast Alert
+                </div>
+                <div class="card-body">
+                    <form id="adminAlertForm">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <input type="text" id="alertMessage" placeholder="Alert message to all students" required aria-label="Alert message">
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-compact" aria-label="Send Alert">
+                                <i class="fas fa-paper-plane"></i> Send Alert
+                            </button>
+                        </div>
+                    </form>
+                    <form id="adminPostponeForm" style="margin-top: 15px;">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <input type="date" id="postponeDate" required aria-label="Postpone date">
+                            </div>
+                            <button type="submit" class="btn btn-warning btn-compact" aria-label="Send Postponement">
+                                <i class="fas fa-calendar-times"></i> Postpone Classes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Set Course End Date -->
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-calendar-check"></i> Set Course End Date
+                </div>
+                <div class="card-body">
+                    <form id="adminEndDateForm">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <input type="text" id="endDateUsername" placeholder="Student username" required aria-label="Student username">
+                            </div>
+                            <div class="form-group">
+                                <input type="date" id="courseEndDate" required aria-label="Course end date">
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-compact" aria-label="Set End Date">
+                                <i class="fas fa-check"></i> Set Date
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Certificate Management -->
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-certificate"></i> Manage Certificates
+                </div>
+                <div class="card-body">
+                    <form id="adminCertForm">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <input type="text" id="certStudentUsername" placeholder="Student username" required aria-label="Student username">
+                            </div>
+                            <div class="form-group">
+                                <input type="text" id="certName" placeholder="Certificate name" required aria-label="Certificate name">
+                            </div>
+                            <div class="form-group">
+                                <select id="certStatus" required aria-label="Certificate status">
+                                    <option value="in-process">In Process</option>
+                                    <option value="ready">Ready</option>
+                                    <option value="delivered">Delivered</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-compact" aria-label="Add/Update Certificate">
+                                <i class="fas fa-save"></i> Add/Update
+                            </button>
+                        </div>
+                    </form>
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="adminCertSearch" placeholder="Search by name or student..." aria-label="Search certificates">
+                    </div>
+                    <div class="cert-list" id="adminCertList"></div>
+                </div>
+            </div>
+
+            <!-- Transaction Recording -->
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-money-bill-wave"></i> Record Transaction
+                </div>
+                <div class="card-body">
+                    <form id="adminTransactionForm">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <input type="text" id="transactionUsername" placeholder="Student username (for payments)" aria-label="Student username">
+                            </div>
+                            <div class="form-group">
+                                <input type="number" id="transactionAmount" placeholder="Amount" required min="0" aria-label="Transaction amount">
+                            </div>
+                            <div class="form-group">
+                                <select id="transactionType" required aria-label="Transaction type">
+                                    <option value="payment">Payment</option>
+                                    <option value="expense">Expense</option>
+                                </select>
+                            </div>
+                            <div class="form-group" id="paymentCategoryGroup">
+                                <select id="paymentCategory" aria-label="Payment category">
+                                    <option value="driver training registration">Driver Training Registration</option>
+                                    <option value="license">License</option>
+                                    <option value="learner's permit/L-sign">Learner's Permit/L-sign</option>
+                                    <option value="others">Others</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-compact" aria-label="Record Transaction">
+                                <i class="fas fa-plus"></i> Record
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Transaction Analysis -->
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-chart-bar"></i> Transaction Analysis
+                    <button class="btn btn-secondary btn-compact" id="adminDownloadPDF" style="margin-left: auto;" aria-label="Download PDF">
+                        <i class="fas fa-file-pdf"></i> Download PDF
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="analysis-tabs">
+                        <button class="tab-btn active" data-period="daily" aria-label="Daily Analysis">Daily</button>
+                        <button class="tab-btn" data-period="monthly" aria-label="Monthly Analysis">Monthly</button>
+                        <button class="tab-btn" data-period="yearly" aria-label="Yearly Analysis">Yearly</button>
+                    </div>
+                    <div id="transactionAnalysis" class="analysis-content"></div>
+                </div>
+            </div>
+
+            <!-- License Payments Management -->
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-id-card"></i> License Payments Management
+                </div>
+                <div class="card-body">
+                    <form id="adminLicensePaymentForm">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <input type="text" id="licenseUsername" placeholder="Student username" required aria-label="Student username">
+                            </div>
+                            <div class="form-group">
+                                <input type="number" id="licenseAmount" placeholder="Amount" required min="0" aria-label="License amount">
+                            </div>
+                            <div class="form-group" style="display: flex; align-items: center; gap: 10px;">
+                                <input type="checkbox" id="paidOnline" aria-label="Paid online">
+                                <label for="paidOnline" style="margin: 0;">Paid Online</label>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-compact" aria-label="Record License Payment">
+                                <i class="fas fa-save"></i> Record License Payment
+                            </button>
+                        </div>
+                    </form>
+                    <div style="margin-top: 20px; padding: 15px; background: #f4f7fa; border-radius: 5px;">
+                        <div class="info-item">
+                            <strong>Pending Online Payments:</strong>
+                            <span id="pendingOnlineCount">0</span> students
+                        </div>
+                        <div class="info-item">
+                            <strong>Total Pending Amount:</strong>
+                            ₦<span id="pendingOnlineAmount">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Skipped Classes Detection -->
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-exclamation-triangle"></i> Skipped Classes Monitor
+                </div>
+                <div class="card-body">
+                    <button class="btn btn-warning btn-compact" id="checkSkippedClasses" aria-label="Check Skipped Classes">
+                        <i class="fas fa-search"></i> Check Skipped Classes
+                    </button>
+                    <div id="skippedClassesList" style="margin-top: 15px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div id="confirmModal" class="modal">
+        <div class="modal-content">
+            <h3>Confirm Action</h3>
+            <p id="confirmMessage"></p>
+            <div class="modal-actions">
+                <button id="confirmYes" class="btn btn-danger btn-compact" aria-label="Confirm">Yes</button>
+                <button id="confirmNo" class="btn btn-secondary btn-compact" aria-label="Cancel">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PIN Verification Modal -->
+    <div id="pinModal" class="modal">
+        <div class="modal-content">
+            <h3><i class="fas fa-lock"></i> Enter Your PIN</h3>
+            <p>Please enter your secret PIN to log this activity</p>
+            <div class="form-group">
+                <input type="password" id="pinInput" maxlength="6" pattern="[0-9]{4,6}" placeholder="Enter PIN" style="text-align: center; font-size: 1.2rem; letter-spacing: 5px;" aria-label="Enter PIN">
+            </div>
+            <div class="modal-actions">
+                <button id="pinVerify" class="btn btn-primary btn-compact" aria-label="Verify PIN">Verify</button>
+                <button id="pinCancel" class="btn btn-secondary btn-compact" aria-label="Cancel">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- External JavaScript -->
+    <script src="script.js"></script>
+</body>
+</html>
